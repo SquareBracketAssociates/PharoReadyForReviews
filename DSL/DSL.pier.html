@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>{Pharo For the Entreprise}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Highlight js -->
+    <link rel="stylesheet" href="../_support/html/highlightjs/styles/default.css">
+    <link rel="stylesheet" href="../_support/html/css/highlight-commands.css">
+    <script src="../_support/html/highlightjs/highlight.pack.js"></script>
+    <script src="../_support/html/js/highlight-commands.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="../_support/html/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../_support/html/css/bootstrap-theme.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 55em; }
+    </style>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+
+    <div class="container text-justify">
+      <h2>Crafting a little Embedded DSL</h2>
+
+<p>In this chapter we will develop a simple domain specific language (DSL) for rolling dice. Players of games such as Dungeon and Dragons are familiar with the DSL we will implement. An example of such DSL is <code>2 D20 + 1 D6</code> which means that we should roll two times a 20-faces dice and one time a 6 faces dice. This chapter will show how we can (1) simply reuse traditional operator such as <code>+</code>, (2) develop an embedded DSL and (3) show a nice usage of class extensions.</p>
+
+<h3>1.  Getting started</h3>
+<p>Using the code browser, define a package named <code>Dice</code> or any name your like.</p>
+<h4>1.1.  Defining the class Dice</h4>
+
+<p><figure><pre><code class="smalltalk">Object subclass: #Dice
+	instanceVariableNames: 'faces'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Dice'</code></pre><figcaption></figcaption></figure></p>
+<p>In the <code>initialize</code> category, define the method <code>initialize</code> as follows. It simply set the default number of faces to 6. </p>
+<p><figure><pre><code class="smalltalk">Dice&gt;&gt;initialize 
+	super initialize.
+	faces := 6</code></pre><figcaption></figcaption></figure></p>
+
+<h4>1.2.  Creating a test </h4>
+<p>It is always empowering to verify that the code we write is always working as we defining it. For 
+this purpose we will create a unit test. Remember unit testing was promoted by K. Beck first in Smalltalk. Nowadays this is a common practice but this is always useful to remember our roots!</p>
+<p>So we define the class <code>DiceTest</code> as a subclass of <code>TestCase</code>.</p>
+<p><figure><pre><code class="smalltalk">TestCase subclass: #DiceTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Dice'</code></pre><figcaption></figcaption></figure></p>
+
+<p><figure><pre><code class="smalltalk">DiceTest&gt;&gt;testInitializeIsOk
+
+		self shouldnt: [ Dice new ] raise: Error</code></pre><figcaption></figcaption></figure></p>
+<h3>2.  Rolling a dice</h3><p>To roll a dice we will use the method from Number <code>atRandom</code> which draws randomly a 
+number between one and the receiver. For example <code>10 at random</code> draws number between 1 to 10. 
+Therefore we define the method <code>roll</code> as follows.</p>
+<p><figure><pre><code class="smalltalk">Dice&gt;&gt;roll
+
+	^ faces atRandom</code></pre><figcaption></figcaption></figure></p>
+<p>Now we can create an instance <code>Dice new</code> and send it the message  <code>roll</code> and get a result.
+Do <code>Dice new inspect</code> and then type in the bottom pane <code>self roll</code>.
+You should get an inspector like the one shown in Figure <a href="#figDiceNoDetail">2.1</a>. With it you can interact with the dice by writing expression in the bottom pane.</p>
+<p><a name="figDiceNoDetail"></a><figure><img src="figures/DiceNoDetail.pdf" width="50%"></img><figcaption>2.1. Inspecting and interacting with a Dice</figcaption></figure></p>
+<p> </p>
+<h4>2.1.  Creating another test</h4><p>We will define a test that verifies that rolling a new created dice with a default 6 faces only returns 
+value comprised between 1 and 6. This is what the following test method is actually specifying.
+ 
+<figure><pre><code class="smalltalk">DiceTest&gt;&gt;testRolling
+	
+	| d |
+	d := Dice new. 
+	10 timesRepeat: [ self assert: (d roll between: 1 and: 6) ]</code></pre><figcaption></figcaption></figure></p>
+<p>Note that often it is better to define the test even before the code it tests. Why? Because you can think about the API of your objects and a scenario that illustrate their correct behavior. It helps you to program your solution.</p>
+<h3>3.  Instance creation interface</h3><p>We would like to get a simpler way to create Dice. For example we want to create a 20-faces dice as follows: <code>Dice faces: 20</code>. Let us define a test for it.</p>
+<p><figure><pre><code class="smalltalk">DiceTest&gt;&gt;testCreationIsOk
+	
+		self shouldnt: [ Dice faces: 20 ] raise: Error</code></pre><figcaption></figcaption></figure></p>
+
+<p>We define the class method <code>faces:</code> as follows. It creates an instance then send the message <code>faces:</code> to it and returns the instance.</p>
+<p><figure><pre><code class="smalltalk">Dice class&gt;&gt;faces: aNumber
+
+	| instance |
+	instance := self new.
+	instance faces: aNumber.
+	^ instance</code></pre><figcaption></figcaption></figure></p>
+<p>This method is strictly equivalent to the one below. The trick is that <code>yourself</code> is a simple method defined on <code>Object</code> class. <code>yourself</code> returns the receiver of a message and the use of <code>;</code> sends the message to the receiver of the previous message (here <code>faces:</code>), therefore <code>yourself</code> is sent to the object resulting from the execution of the expression <code>self new</code> (which returns a new instance of the class <code>Dice</code>). </p>
+<p><figure><pre><code class="smalltalk">Dice class&gt;&gt;faces: aNumber
+	
+	^ self new faces: aNumber; yourself</code></pre><figcaption></figcaption></figure></p>
+<p>If you execute it will not work since we did not create yet the method <code>faces:</code> this is now the time to define it.
+<figure><pre><code class="smalltalk">Dice&gt;&gt;faces: aNumber
+
+	faces := aNumber</code></pre><figcaption></figcaption></figure></p>
+<p>Now your tests should run. </p>
+<p>So even if the class <code>Dice</code> could implement more behavior, we are ready to implement a dice handle. </p>
+<h3>4.  First specification of a dice handle</h3>
+<p>Let us define a new class <code>DiceHandle</code> that represents a dice handle. 
+Here is the API that we would like to offer for now. We create a new instance of the handle then add some dice to it.</p>
+<p><figure><pre><code class="smalltalk">DiceHandle new 
+	addDice: (Dice faces: 6);
+	addDice: (Dice faces: 10);
+	yourself</code></pre><figcaption></figcaption></figure></p>
+<p>Of course we will define a test for this new class. We define the class <code>DiceHandleTest</code> as follow. </p><h4>4.1.  Testing Handle Dice</h4><p><figure><pre><code class="smalltalk">TestCase subclass: #DiceHandleTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Dice'</code></pre><figcaption></figcaption></figure></p>
+<p>We define a new test method as follows. </p>
+<p><figure><pre><code class="smalltalk">DiceHandleTest&gt;&gt;testCreationAdding
+
+	| handle |
+	handle := DiceHandle new 
+			addDice: (Dice faces: 6);
+			addDice: (Dice faces: 10);
+			yourself.
+	self assert: handle diceNumber = 2.</code></pre><figcaption></figcaption></figure></p>
+<p>In fact we can do it better and add a new test method that verifies that we can even add
+two dices having the same number of faces. </p>
+<p><figure><pre><code class="smalltalk">DiceHandleTest&gt;&gt;testAddingTwiceTheSameDice
+
+	| handle |
+	handle := DiceHandle new 
+			addDice: (Dice faces: 6);
+			yourself.
+	self assert: handle diceNumber = 1.
+	handle addDice: (Dice faces: 6).
+	self assert: handle diceNumber = 2.</code></pre><figcaption></figcaption></figure></p>
+
+
+<h4>4.2.  Defining the DiceHandle class</h4>
+<p>This class defines one instance variable to hold dices it contains. </p>
+<p><figure><pre><code class="smalltalk">Object subclass: #DiceHandle
+	instanceVariableNames: 'dice'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Dice'</code></pre><figcaption></figcaption></figure></p>
+<p>We simply initialize it so that its instance variable <code>dice</code> contains an <code>OrderedCollection</code>.</p>
+<p><figure><pre><code class="smalltalk">DiceHandle&gt;&gt;initialize
+	super initialize.
+	dice := OrderedCollection new.</code></pre><figcaption></figcaption></figure></p>
+<p>Then we define a simple method to add a dice to the list of dices of the handle.</p>
+<p><figure><pre><code class="smalltalk">DiceHandle&gt;&gt;addDice: aDice 
+	dice add: aDice</code></pre><figcaption></figcaption></figure></p>
+<p>Now you can execute the code snippet and inspect it. You should get an inspector as shown in Figure <a href="#diceHandleNoDetail">4.1</a> 
+<figure><pre><code class="smalltalk">DiceHandle new 
+	addDice: (Dice faces: 6);
+	addDice: (Dice faces: 10);
+	yourself</code></pre><figcaption></figcaption></figure></p>
+<p><a name="diceHandleNoDetail"></a><figure><img src="figures/DiceHandleNoDetail.pdf" width="50%"></img><figcaption>4.1. Inspecting a Dice</figcaption></figure></p>
+
+
+<p>Finally we should add the method <code>diceNumber</code> to the <code>DiceHandle</code> class to be able to get the number of dice of the handle. We just returns the size of the dices collection.</p>
+<p><figure><pre><code class="smalltalk">DiceHandle&gt;&gt;diceNumber  
+
+	^ dice size</code></pre><figcaption></figcaption></figure></p>
+<p>Now you tests should run and this is good moment to save and publish your code. </p>
+
+
+
+<h3>5.  Improving programmer experience</h3>
+<p>Now when you open an inspector you cannot see well the dices that compose the dice handle. Click on the dice instance variable and you will only get a list of <code>a Dice</code> without further information. </p>
+<p><figure><pre><code class="smalltalk">DiceHandle new 
+	addDice: (Dice faces: 6);
+	addDice: (Dice faces: 10);
+	yourself</code></pre><figcaption></figcaption></figure></p>
+<p>So we will enhance the <code>printOn:</code> method of the Dice class to provide more information. Here we simply add the number of faces surrounded by parenthesis.</p>
+
+<p><figure><pre><code class="smalltalk">Dice&gt;&gt;printOn: aStream
+
+	super printOn: aStream.
+	aStream nextPutAll: ' (', faces printString, ')'</code></pre><figcaption></figcaption></figure></p>
+<p>Now in your inspector you can see effectively the number of faces a dice handle has as shown by Figure <a href="#diceDetail">5.1</a> and it is now easier to check the dice contained inside a handle (See Figure <a href="#diceHandleDetail">5.2</a>).</p>
+<p><a name="diceDetail"></a><figure><img src="figures/DiceDetail.png" width="50%"></img><figcaption>5.1. Dice details</figcaption></figure> </p>
+<p><a name="diceHandleDetail"></a><figure><img src="figures/DiceHandleDetail.png" width="50%"></img><figcaption>5.2. Dice Handle with more information</figcaption></figure> </p><h3>6.  Rolling a dice handle</h3>
+<p>Now we can define the rolling of a handle of dice by simply summing the dice rolls.
+<figure><pre><code class="smalltalk">DiceHandle&gt;&gt;roll
+	
+	| res |
+	res := 0.
+	dice do: [ :each | res := res + each roll ].
+	^ res</code></pre><figcaption></figcaption></figure></p>
+
+<p>Now we can send the message <code>roll</code> to a dice handle.
+<figure><pre><code class="smalltalk">handle := DiceHandle new 
+		addDice: (Dice faces: 6);
+		addDice: (Dice faces: 10);
+		yourself.
+handle roll</code></pre><figcaption></figcaption></figure></p>
+<h3>7.  Role playing syntax</h3>
+<p>Now we are ready to offer a syntax following practice of role playing game, i.e., using <code>2 D20</code> to create a handle of two 20 faces dice.  For this purpose we will define class extensions: we will define methods in the class <code>Integer</code> but these methods will be only available when the package Dice will be loaded. </p>
+<p>But first let us specify  what we would like to obtain by writing a new  test in the class <code>DiceHandleTest</code>. Remember
+to always take  any opportunity to write tests.  When we execute <code>2 D20</code> we  should get a new handle  composed of two
+dice and can verify that. This is what the method <code>testSimpleHandle</code> is doing.</p>
+<p><figure><pre><code class="smalltalk">DiceHandleTest&gt;&gt;testSimpleHandle
+
+	self assert: 2 D20 diceNumber = 2.</code></pre><figcaption></figcaption></figure></p>
+<p>Verify that the test is not working! It is much more satisfactory to get a test running when it was not working before. Now define the method <code>D20</code> with a category name that is <code>*Dice</code> (if you named your package Dice). This method simply creates a new dice handle, add the correct number of dice to this handle and return it.</p>
+<p><figure><pre><code class="smalltalk">Integer&gt;&gt;D20
+	
+	| handle |
+	handle := DiceHandle new.
+	self timesRepeat: [ handle addDice:  (Dice faces: 20)].
+	^ handle</code></pre><figcaption></figcaption></figure></p>
+<p>Now you test should pass and this is probably a good moment to save your work either by publishing your package to SmalltalkHub and to save your image. </p>
+<p>Now we could do the same for the default dice with different faces number: 4, 6, 10, and 20.
+But we should avoid duplicating logic and code. So first we will introduce a new method <code>D:</code> and based on it we will define all the others</p>
+<p><figure><pre><code class="smalltalk">Integer&gt;&gt;D: anInteger
+	
+	| handle |
+	handle := DiceHandle new.
+	self timesRepeat: [ handle addDice:  (Dice faces: anInteger)].
+	^ handle</code></pre><figcaption></figcaption></figure></p>
+<p><figure><pre><code class="smalltalk">Integer&gt;&gt;D4
+	
+	^ self D: 4</code></pre><figcaption></figcaption></figure></p>
+<p><figure><pre><code class="smalltalk">Integer&gt;&gt;D6
+	
+	^ self D: 6</code></pre><figcaption></figcaption></figure></p>
+<p><figure><pre><code class="smalltalk">Integer&gt;&gt;D10
+	
+	^ self D: 10</code></pre><figcaption></figcaption></figure></p>
+<p><figure><pre><code class="smalltalk">Integer&gt;&gt;D20
+	
+	^ self D: 20</code></pre><figcaption></figcaption></figure></p>
+<p>We have now a compact form to create dice and we are ready for the last part: the addition of handles. </p>
+<h4>7.1.  Handle's Addition</h4>
+<p>Now we can simply support the addition of handles. But of course let's write a test first.</p>
+<p><figure><pre><code class="smalltalk">DiceHandleTest&gt;&gt;testSumming
+
+	| handle |
+	handle := 2 D20 + 3 D10.
+	self assert: handle diceNumber = 5.</code></pre><figcaption></figcaption></figure></p>
+<p>We will define a method <code>+</code> on the HandleDice class. In other languages this is often not possible or is based on operator overloading. In Pharo <code>+</code> is just a message as any other, therefore we can define it on the classes we want.</p>
+<p>Now we should ask ourself what is the semantics of adding two handles. Should we modify the receiver of the expression or create a new one. We preferred a more functional style and choose the create a third one. </p>
+<p>The method <code>+</code> creates a new handle then add to it the dice of the receiver and the one of the handle passed as argument to the message. Finally we return it. </p>
+<p><figure><pre><code class="smalltalk">DiceHandle&gt;&gt;+ aDiceHandle
+
+	| handle |
+	handle := self class new.
+	self dice do: [ :each | handle addDice: each ].
+	aDiceHandle dice do: [ :each | handle addDice: each ].
+	^ handle</code></pre><figcaption></figcaption></figure></p>
+<p>Now we can execute the method <code>(2 D20 + 1 D6) roll</code> nicely and start playing role playing games, of course.</p>
+<h3>8.  Conclusion</h3>
+<p>This chapter illustrates how to create a small DSL based on the definition of some domain classes (here <code>Dice</code> and  
+ <code>DiceHandle</code>) and the extension of core class such <code>Integer</code>.
+It shows that in Pharo we can use usual operators to express natural models.</p>
+
+
+
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="../_support/html/js/bootstrap.min.js"></script>
+
+    <!-- Syntax highlighting of code blocks -->
+    <script>hljs.initHighlightingOnLoad();</script>
+
+  </body>
+</html>

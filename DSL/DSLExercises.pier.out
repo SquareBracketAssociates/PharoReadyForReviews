@@ -1,0 +1,9 @@
+\BOOKMARK [0][-]{chapter.1}{Crafting a Simple Embedded DSL with Pharo}{}% 1
+\BOOKMARK [1][-]{section.1.1}{ Getting started}{chapter.1}% 2
+\BOOKMARK [1][-]{section.1.2}{ Rolling a dice}{chapter.1}% 3
+\BOOKMARK [1][-]{section.1.3}{ Instance creation interface}{chapter.1}% 4
+\BOOKMARK [1][-]{section.1.4}{ First specification of a dice handle}{chapter.1}% 5
+\BOOKMARK [1][-]{section.1.5}{ Improving the programmer experience}{chapter.1}% 6
+\BOOKMARK [1][-]{section.1.6}{ Rolling a dice handle}{chapter.1}% 7
+\BOOKMARK [1][-]{section.1.7}{ Role playing syntax}{chapter.1}% 8
+\BOOKMARK [1][-]{section.1.8}{ Conclusion}{chapter.1}% 9
