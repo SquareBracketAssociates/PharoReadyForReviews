@@ -1,11 +1,9 @@
 ! Startup Preferences
 
 Have ever been wanted to always do the same actions before starting to work with a new image? 
-Pharo2.0 supports startup preferences. You can specify actions that are automatically executed
-when you launch the system. Startup preferences were implemented by B. van Ryseghem and M. Martinez-Peck. This chapter is
-an update of his blog that covered this topic. 
-Before showing how you can take advantage of startup preferences, we will look at the old way 
-to execute automated actions at startup. Then we present startup preferences. 
+Since it version 2.0, Pharo supports startup preferences. You can specify actions that are automatically executed when you launch the system. Startup preferences were implemented by B. van Ryseghem and M. Martinez-Peck. 
+
+This chapter is an update of his blog that covered this topic.  Before showing how you can take advantage of startup preferences, we will look at the old way to execute automated actions at startup. Then we present startup preferences. 
 
 !! The old way
 How can we execute something at startup with Pharo? Traditionally there have been two known ways:
@@ -17,8 +15,10 @@ Pass a ==.st== file as parameter to the VM, that is, you execute the VM like thi
 /Users/mariano/Pharo/VM/Pharo.app/Contents/MacOS/Pharo /Users/mariano/Pharo/images/Pharo-1.4.image startup.st
 ]]]
  
+You execute the VM, pass the Pharo image as parameter and then the file. This will be executed during system startup. What's the problem with this? If you always want to execute the startup in different images you always need to open the image this way, from command line. Moreover, this file is hand-coded and not versioned in Monticello. 
 
-You execute the VM, pass the Pharo image as parameter and then the file (SD:	is is still working like that?). This will be executed during system startup. What's the problem with this? If you always want to execute the startup in different images you always need to open the image this way, from command line. Moreover, this file is hand-coded and not versioned in Monticello. 
+@@authorToDo: is is still working like that?
+
 
 !!! Using the start up list
 Pharo infrastructure offers the possibility for classes to register themselves to a startup list. The system ensures the ==startUp== and ==shutDown== methods of the registered classes are executed during the start up and shut down of the system. 
@@ -57,20 +57,18 @@ The location search order from the most general to the most specific are the fol
 
 !!!General preference folder
 General means that it applied to all Pharo versions. This folder is shared for all the images you open. 
-On Mac OSX and Pharo 2.0, it is =='Library/Preferences/pharo/==. In this place, ==StartupLoader== will load ALL existing ==.st== files. This type of startup is useful when we have something to execute for all images of all Pharo versions. SD: what is the location on linux an windows? Please add here.
+On Mac OSX and Pharo, it is =='Library/Preferences/pharo/==. In this place, ==StartupLoader== will load ALL existing ==.st== files. This type of startup is useful when we have something to execute for all images of all Pharo versions. 
+
+@@authorToDo SD: what is the location on linux an windows? Please add here.
 
 
 !!!Preference version folder
-Now if you want to only get some actions executed for a specific version, define a folder with the version number inside the general preference folder. On Mac OS X, a specific 2.0 folder is ==Library/Preferences/pharo/2.0/'==. This type of startup is useful when we have something to execute for all images of a specific Pharo version.
+Now if you want to only get some actions executed for a specific version, define a folder with the version number inside the general preference folder. On Mac OS X, a specific 2.0 folder is ==Library/Preferences/pharo/2.0/'== in your user account. This type of startup is useful when we have something to execute for all images of a specific Pharo version.
 
 !!!The image folder
-The startup only searches for a file called 'startup.st'. So if you have such a file in the same directory where the image is, then such script will be executed automatically. This type of startup is usually used to do something that is application-specific or something that only makes sense for the specific image you are using. Now you might ask why we don't search the image folder for multiple .st files.  This is because it is normal for the image folder to contain ==.st== files unrelated to preferences - such as from any file out.  Using one specific file 'startup.st' avoids problems. Be careful if you already were sending your own 'startup.st' as parameter to the VM because it will be executed twice. 
+The startup only searches for a file called =='startup.st'==. So if you have such a file in the same directory where the image is, then such script will be executed automatically. This type of startup is usually used to do something that is application-specific or something that only makes sense for the specific image you are using. Now you might ask why we don't search the image folder for multiple .st files.  This is because it is normal for the image folder to contain ==.st== files unrelated to preferences - such as from any file out.  Using one specific file =='startup.st'== avoids problems. Be careful if you already were sending your own =='startup.st'== as parameter to the VM because it will be executed twice. 
 
-
-
-You can query whether the StartupLoader is enabled using the messages ==allowStartupScript== and you can change its status using ==allowStartupScript:== sent to the class ==StartupLoader==. 
-
-
+You can query whether the ==StartupLoader== is enabled using the messages ==allowStartupScript== and you can change its status using ==allowStartupScript:== sent to the class ==StartupLoader==. 
 
 So you know where the system will search startup files. Now you can directly put your code there and it will be automatically executed during startup. Should we just write scripts there?  Of course not! We use StartUp Actions as we will explain next.
 
@@ -97,12 +95,12 @@ What we do first is to create an instance of ==StartupAction== using the message
 In this example, we just set the author identification to 'MarianoMartinezPeck' and we put a setting to always open the debugger (no pre-debugger window). So far nothing special. 
 
 
-The magic comes with the last line, the message #addAtStartupInPreferenceVersionFolder: items named: aFileName  receives a list of startup actions and a filename and stores the actions in a file with the passes argument. So in this case we have only one action called 'Basic Settings' and it will be saved in a file called 'basicSettings.st'. But where? 
+The magic comes with the last line, the message ==addAtStartupInPreferenceVersionFolder: items named: aFileName==  receives a list of startup actions and a filename and stores the actions in a file with the passes argument. So in this case we have only one action called =='Basic Settings'== and it will be saved in a file called =='basicSettings.st'==. But where? 
 
 
 Since we used the message ==addAtStartupInPreferenceVersionFolder:named:==  (notice the ==InPreferenceVersionFolder==), it will be created in the following place ==pharo/pharoVersionNumber/==. The message ==addAtStartupInGeneralPreferenceFolder:named:== stores files in the general folder (==pharo==) and the ==addAtStartupInImageDirectory:== stores besides the image. 
 
-Notice that with the first two messages we can specify the file name but with the last one we can't. Remember the last one is always called 'startup.st'. If you are lazy and don't want to think the name yourself, you can just use ==addAtStartupInPreferenceVersionFolder:== which creates a file called =='startupPharoNN.st'== or ==addAtStartupInGeneralPreferenceFolder:== that creates a file named =='startupPharo.st'==.
+Notice that with the first two messages we can specify the file name but with the last one we can't. Remember the last one is always called =='startup.st'==. If you are lazy and don't want to think the name yourself, you can just use ==addAtStartupInPreferenceVersionFolder:== which creates a file called =='startupPharoNN.st'== or ==addAtStartupInGeneralPreferenceFolder:== that creates a file named =='startupPharo.st'==.
 
 
 
@@ -153,7 +151,6 @@ You can set the debugger to never open the preview and to filter common message 
 [[[Debugger 
 	alwaysOpenFullDebugger: true;
 	filterCommonMessageSends: true.
-
 ]]]
 	
 	
@@ -176,10 +173,10 @@ You can customize the text editor as well as the style of the syntax highlighter
 
 [[[
 TextEditorDialogWindow autoAccept: true.
-
 SHPreferences setStyleTableNamed: 'Tango'.]]]
 
 You can enable the Free Type fonts.
+
 [[[
 FreeTypeSystemSettings loadFt2Library: true.
 ]]]
@@ -200,7 +197,6 @@ MCDirectoryRepository defaultDirectoryName: '/Users/mariano/Pharo/localRepo/'.
 ]]]
 
 Setting the user and password of some Monticello repositories
-
 [[[
 (MCRepositoryGroup default repositories
 	select: [:each | (each isKindOf: MCHttpRepository)
@@ -225,22 +221,22 @@ Smalltalk isHeadless ifFalse: [
 
 !! How to split your settings in files and actions?
 
-So you may have noticed that: a) ==addAtStartupInPreferenceVersionFolder:== and friends expect a list of actions; b) you can have multiples files. How do you split your code? There is basically not restriction from the design of StartupLoader. 
+So you may have noticed that: 
+
+# a) ==addAtStartupInPreferenceVersionFolder:== and friends expect a list of actions; 
+# b) you can have multiples files. How do you split your code? There is basically not restriction from the design of StartupLoader. 
+
 You can have as many actions per files and as many files as you wish. An action has a block of closure that can contain as much code as you want.
 
 We found that one way of splitting your code is when some actions need to be executed only once and some other each time. Another reason may be some code which may be expected to fail for some reason. If it fails, the code after the line that generated the error won’t be executed. Hence, you may want to split that code to a separate action.
 
 !!!Be careful with the cache!
-To support the "runOnce:" property, actions are stored in the singleton instance of StartupLoader. After an action is executed (if executed correctly), the action is stored and marked as executed. It may happen that later on you modify the scripts by hand, or you change the rules and re-store them or some kind of black magic. If you change some of these, we recommend to do 2 things:
+To support the ==runOnce:== property, actions are stored in the singleton instance of StartupLoader. After an action is executed (if executed correctly), the action is stored and marked as executed. It may happen that later on you modify the scripts by hand, or you change the rules and re-store them or some kind of black magic. If you change some of these, we recommend to do 2 things:
 
 - Remove all existing files from the preference directories (no script is removed automatically). Check methods ==remove*== in ==StartupLoader==.
 - Remove the existing stored actions in ==StartupLoader==. Check the method ==cleanSavedActionsAndErrors== and ==removeAllScriptsAndCleanSavedActions==. 
 
 !! Conclusion
 
-This tool is really an excellent companion to improve your productivity and build automatically working environments where you feel at home. 
-So use it and share your nice settings with the community. 
+This tool is really an excellent companion to improve your productivity and build automatically working environments where you feel at home. So use it and share your nice settings with the community. 
 
-% Local Variables:
-% eval: (flyspell-mode -1)
-% End:
