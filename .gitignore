@@ -1,3 +1,17 @@
 /Pharo.changes
 /Pharo.image
 /pillar
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+auto/
+*.synctex.gz
+*.toc
+*.html
+*.md
+*.pdf
+*.tex
+*.url
+/book-result/
