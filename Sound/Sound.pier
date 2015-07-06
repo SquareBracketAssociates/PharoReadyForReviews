@@ -31,7 +31,7 @@ Once Pharo installed, you must download the package PharoSound using:
 - or Gofer the package manager:
 [[[
 Gofer new
-	smalltalkhubUser 'PharoExtras' project 'Sound';
+	smalltalkhubUser: 'PharoExtras' project: 'Sound';
 	package: 'ConfigurationOfPharoSound';
 	load.
 (#ConfigurationOfPharoSound asClass project version: #stable) load
