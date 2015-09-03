@@ -15,3 +15,7 @@ auto/
 *.tex
 *.url
 /book-result/
+/pharo
+/pharo-ui
+/output.txt
+/pillarPostExport.sh
