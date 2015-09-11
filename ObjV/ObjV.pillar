@@ -15,7 +15,7 @@ are some of the points you can deeply understand while doing the exercise.
 - What is class initialization?
 - What the semantics of the method lookup?
 - What is a reflective kernel?
-- What are the roles of the classes \stc{Class== and \stc{Object==?
+- What are the roles of the classes ==Class== and ==Object==?
 - What is the role of a metaclass? 
 
 
@@ -245,7 +245,7 @@ You could think that keeping the same order of the instance variables between a 
 ==computeNewIVFrom:with:== should take care of that aspect.
 
 !!Method Management
-A class stores the behavior (expressed by methods) shared by all its instances into a method dictionary. In our implementation, we represent methods by associating a symbol to a Pharo ''block=='' a kind of an anonymous method. The block is then stored in the method dictionary of an objClass. In this implementation we do not offer the ability to  access  directly instance variables of the class in which the method is defined. This could be done by sharing a common environment among all the methods. The programmer has to use accessors or the ==setIV== and ==getIV== objMethods defined on ==ObjObject== to access the instance variables. You can find them in the bootstrap method on the class side of ==Obj==.
+A class stores the behavior (expressed by methods) shared by all its instances into a method dictionary. In our implementation, we represent methods by associating a symbol to a Pharo ''block'' a kind of an anonymous method. The block is then stored in the method dictionary of an objClass. In this implementation we do not offer the ability to  access  directly instance variables of the class in which the method is defined. This could be done by sharing a common environment among all the methods. The programmer has to use accessors or the ==setIV== and ==getIV== objMethods defined on ==ObjObject== to access the instance variables. You can find them in the bootstrap method on the class side of ==Obj==.
 
 The following code describes the definition of the method ==x== defined  on the objClass ==ObjPoint== that invokes a field access
 
