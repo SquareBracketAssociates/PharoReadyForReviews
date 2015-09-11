@@ -6,7 +6,7 @@ In this tutorial we develop a simple Domain Specific Language (DSL) for rolling 
 2 D20 + 1 D6
 ]]]
 
-This example means that we should roll two times a 20-faces dice and one time a 6 faces dice. This tutorial shows how we can (1) simply reuse traditional operator such as ==+==, (2) develop an embedded DSL and (3) use class extensions (aka open classes).
+This example means that we should roll two times a 20-faces dice and one time a 6 faces dice. This tutorial shows how we can (1) simply reuse traditional operator such as ==\+==, (2) develop an embedded DSL and (3) use class extensions (aka open classes).
 
 !! Getting started
 
@@ -282,9 +282,9 @@ DiceHandleTest>>testSumming
     self assert: handle diceNumber equals: 5.
 ]]]
 
-We define a ==+== method on the ==DiceHandle== class. In other languages this is often not possible or is based on operator overloading. In Pharo ==+== is just a message as any other. Therefore we can define the ==+== method on the classes we want.
+We define a ==\+== method on the ==DiceHandle== class. In other languages this is often not possible or is based on operator overloading. In Pharo ==\+== is just a message as any other. Therefore we can define the ==\+== method on the classes we want.
 
-What is the semantics of adding two handles? Should we modify the receiver of the expression or create a new handle? In this tutorial we choose the functional style and decide that a new handle should be created. As a result, the method ==+== first creates a new handle then adds to it the dice of the receiver and the ones of the handle passed as argument. Finally, ==+== must return the newly created handle. To access the dice of the dice handle passed as a parameter, you will have to add a dedicated accessor.
+What is the semantics of adding two handles? Should we modify the receiver of the expression or create a new handle? In this tutorial we choose the functional style and decide that a new handle should be created. As a result, the method ==\+== first creates a new handle then adds to it the dice of the receiver and the ones of the handle passed as argument. Finally, ==\+== must return the newly created handle. To access the dice of the dice handle passed as a parameter, you will have to add a dedicated accessor.
 
 [[[
 Your code here
