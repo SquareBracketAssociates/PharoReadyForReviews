@@ -192,7 +192,7 @@ Make sure that you execute the test method: ==testClassAccess==
 [[[
 RawObjTest >> testClassAccess
   "(self  selector: #testClassAccess) run"
-  	
+     
   self assert: (aPoint objClass = pointClass)
 ]]]
 
@@ -233,7 +233,7 @@ Make sure that you execute the test method: ==testIVOffsetAndValue== and it pass
 
 !!Object Allocation and Initialization
 
-The creation of an object is the composition of two elementary operations: its 'allocation' and its 'initialization'. 
+The creation of an object is the composition of two elementary operations: its '''allocation''' and its ''initialization''. 
 
 We now define all the primitives that allow us to allocate and initialize an object. Remember that 
 # the allocation is a class method that returns a nearly empty structure, nearly empty because the instance represented by the structure should at least knows its class and 
@@ -263,7 +263,7 @@ Make sure that you execute the test method: ==testAllocate==
 !!! Keywords Primitives
 
 The original implementation of ObjVLisp uses the facility offered by the Lisp keywords to ease the specification of the instance variable values during
-instance creation then providing an uniform and unique way to create objects.
+instance creation. It also  provides an uniform and unique way to create objects.
 We have to implement some functionality to support keywords. However
 as this is not really interesting that you lose time we give you
 all the necessary primitives. 
@@ -271,7 +271,29 @@ all the necessary primitives.
 !!!! Your Job. 
 All the functionality for managing the keywords are defined into the category =='keyword management'==. Read the code and the associated test called ==testKeywords== in the class ==ObjTest==.
 
-Make sure that you execute the test method: ==testKeywords==
+[[[
+ObjTest >> testKeywords
+  "(self  selector: #testKeywords) run"
+
+| dummyObject |
+dummyObject := Obj new.
+self assert: 
+   ((dummyObject generateKeywords: #(#titi #toto #lulu))
+      = #(#titi: #toto: #lulu:)).
+self assert: 
+   ((dummyObject keywordValue: #x
+         getFrom: #(#toto 33 #x 23)
+         ifAbsent: 2) = 23).
+self assert: 
+      ((dummyObject keywordValue: #x
+         getFrom: #(#toto 23)
+         ifAbsent: 2) = 2).
+self assert: 
+      ((dummyObject returnValuesFrom: #(#x 22 #y 35) followingSchema: #(#y #yy #x #y))
+         = #(35 nil 22 35))
+]]]
+
+Make sure that you execute the test method: ==testKeywords== and that it passes. 
 
 !!! Object Initialization
 Once an object is allocated, it may be initialized by the programmer by specifying a list of initialization values. We can represent such list by an array containing alternatively
@@ -280,43 +302,73 @@ a keyword and a value like ==#(#toto 33 #x 23)== where 33 is associated with ==#
 !!!! Your Job. 
 Read in the category =='instance initialization'== the primitive  ==initializeUsing: anArray== that sent an object with an initialization list returns an initialized object.
 
+[[[
+ObjTest >> testInitialize
+  "(self  selector: #testInitialize) run"
 
+  | newInstance  |
+  newInstance := pointClass allocateAnInstance.
+  newInstance initializeUsing: #(#y: 2 #z: 3 #t: 55 #x: 1).
+  self assert: (newInstance at: 1) equals: #ObjPoint.
+  self assert: (newInstance at: 2) equals: 1.
+  self assert: (newInstance at: 3) equals: 2.
+]]]
 
 !! Static Inheritance of Instance Variables
 
 Instance variables are statically inherited at the class creation time. The simplest form of instance variable inheritance is to define the  complete set of instance variables as the ordered fusion between the inherited instance variables  and the locally defined instance variables. For simplicity reason and as most of the languages, we chose to forbid duplicated instance
 variables in the inheritance chain.
 
-!!!! Your Job. 
-In the category =='iv inheritance'== read the primitive  ==computeNewIVFrom: superIVOrdCol with: localIVOrdCol==.
+!!!! Your Job  
+In the category =='iv inheritance'==, read and understand the primitive  ==computeNewIVFrom: superIVOrdCol with: localIVOrdCol==.
 
-The primitive takes two ordered collections of symbols and returns an ordered collection containing the union of the two ordered collections but with the extra constraint that the order of elements of the first ordered collection is kept. Look at the test method testInstanceVariableInheritance for examples.
+The primitive takes two ordered collections of symbols and returns an ordered collection containing the union of the two ordered collections but with the extra constraint that the order of elements of the first ordered collection is kept. Look at the test method ==testInstanceVariableInheritance== below for examples.
 
-Make sure that you execute the test method: ==testInstanceVariableInheritance==
- 
-!!!!Side Remark. 
+Make sure that you execute the test method: ==testInstanceVariableInheritance== and that is passes.
+
+[[[
+ObjTest >> testInstanceVariableInheritance
+   "(self  selector: #testInstanceVariableInheritance) run"
+
+   "a better choice would be to throw an exception if there are duplicates"
+   self assert: 
+      ((Obj new computeNewIVFrom: #(#a #b #c #d) asOrderedCollection
+         with: #(#a #z #b #t) asOrderedCollection)
+         = #(#a #b #c #d #z #t) asOrderedCollection).
+   self assert: 
+      ((Obj new computeNewIVFrom: #() asOrderedCollection
+         with: #(#a #z #b #t) asOrderedCollection)
+         = #(#a #z #b #t) asOrderedCollection)
+]]]
+
+!!!!Side Remark 
 You could think that keeping the same order of the instance variables between a superclass and its subclass is not an issue. This is partly true in this simple implementation because the instance variable accessors computes each time the corresponding offset to access an instance variable using the primitive ==offsetFromClassOfInstanceVariable:==.  However, the structure (instance variable order) of a class is hardcoded by the primitives. That's why your implementation of the primitive
 ==computeNewIVFrom:with:== should take care of that aspect.
 
 !!Method Management
 A class stores the behavior (expressed by methods) shared by all its instances into a method dictionary. In our implementation, we represent methods by associating a symbol to a Pharo ''block'' a kind of an anonymous method. The block is then stored in the method dictionary of an objClass. In this implementation we do not offer the ability to  access  directly instance variables of the class in which the method is defined. This could be done by sharing a common environment among all the methods. The programmer has to use accessors or the ==setIV== and ==getIV== objMethods defined on ==ObjObject== to access the instance variables. You can find them in the bootstrap method on the class side of ==Obj==.
 
-The following code describes the definition of the method ==x== defined  on the objClass ==ObjPoint== that invokes a field access
+In our ObjVLisp implementation, we do not have a syntax for message passing. Instead of we call the primitives using the  Pharo syntax for message passing (using the message ==send:withArguments:==)
+The following expression ==objself getIV: x== is expressed as in ObjVLisp as 
+==objself send: #getIV withArguments: #(#x)==. 
+
+
+The following code describes the definition of the accessor method ==x== defined on the objClass ==ObjPoint== that invokes a field access using the message ==getIV==. 
 
 [[[
 ObjPoint  
-	addUnaryMethod: #accessInstanceVariableX 
-    withBody: 'objself send: #getIV withArguments: #(#x). 
+   addUnaryMethod: #accessInstanceVariableX 
+   withBody: 'objself send: #getIV withArguments: #(#x)'. 
 ]]]
 
-As a first approximation this code will create the following block that will get stored into the class method dictionary. ==[:objself | objself send: #getIV withArguments: #(#x)]==.  As you may notice, in our implementation, the receiver is always an explicit argument of the method. Here we named it ==objself==. 
-
-In the ObjVLisp world, we do not have a syntax for message passing. Instead of we call the primitives using the  Pharo syntax for message passing (using the message ==send:withArguments:==)
+As a first approximation this code will create the following block that will get stored into the class method dictionary. ==[ :objself | objself send: #getIV withArguments: #(#x) ]==.  As you may notice, in our implementation, the receiver is always an explicit argument of the method. Here we named it ==objself==. 
 
 
-!!!!Defining a method and sending a message. 
 
-As we want to keep this implementation as simple as possible, we define only one primitive for sending a message ==send:withArguments:==. To see the mapping between Pharo and ObjVlisp ways of expressing message sent, look at the comparison below:
+
+!!!! Defining a method and sending a message  
+
+As we want to keep this implementation as simple as possible, we define only one primitive for sending a message: it is ==send:withArguments:==. To see the mapping between Pharo and ObjVlisp ways of expressing message sent, look at the comparison below:
 
 [[[
 Pharo Unary: self odd 
@@ -325,82 +377,100 @@ ObjVLisp: objself send: #odd withArguments: #()
 Pharo Binary: a + 4 
 ObjVLisp:  a send: #+ withArguments: #(#(4)) 
 
-Pharo    Keyword: a max: 4 &
-ObjVLisp: a send: #max: withArguments: #(4)\\
+Pharo Keyword: a max: 4
+ObjVLisp: a send: #max: withArguments: #(4)
 ]]]
-
-
 
 
 While in Pharo you would write the following method definition:
 [[[
 bar: x
-
-     self foo: x    
+  self foo: x
 ]]]
 
 In our implementation of ObjVlisp you write:
-
 [[[
 anObjClass
-        addMethod: #bar
-        args: 'x'
-        withBody: 'objself send: #foo: withArguments: #x'. 
+  addMethod: #bar:
+  args: 'x'
+  withBody: 'objself send: #foo: withArguments: #x'. 
 ]]]
 
 
-
-!!!! Your Job. 
-We provide you all the primitives that deals with method definition. In the category =='method management'== look at the methods  ==addMethod: aSelector args: aString withBody: aStringBlock==,
+!!!! Your Job 
+We provide all the primitives that handle with method definition. In the category =='method management'== look at the methods  ==addMethod: aSelector args: aString withBody: aStringBlock==,
 ==removeMethod: aSelector== and ==doesUnderstand: aSelector==. Implement ==bodyOfMethod: aSelector==. 
 
 Make sure that you execute the test method: ==testMethodManagement==
 
+[[[
+ObjTest >> testMethodManagement
+   "(self  selector: #testMethodManagment) run"
+   self assert: (pointClass doesUnderstand: #x).
+   self assert: (pointClass doesUnderstand: #xx) not.
 
+   pointClass 
+      addMethod: #xx
+      args: ''
+         withBody: 'objself valueOfInstanceVariable: #x '.
+   self assert: (((pointClass bodyOfMethod: #xx) value: aPoint) = 10).
+   self assert: (pointClass doesUnderstand: #xx).
+   pointClass removeMethod: #xx.
+   self assert: (pointClass doesUnderstand: #xx) not.
+   self assert: (((pointClass bodyOfMethod: #x) value: aPoint) = 10)
+]]]
 
 !! Message Passing and Dynamic Lookup
 
-Sending a message is the result of the composition of method
-lookup and execution. The following ==basicSend:withArguments:from:== primitive just implements it. 
+Sending a message is the result of the composition of ''method lookup'' and ''execution''. The following ==basicSend:withArguments:from:== primitive just implements it. 
 First it looks up the method into the class or superclass of the receiver then if a
-method has been found it execute it, else (lookup:for: returned nil and we raise a Pharo error. 
+method has been found it execute it, else ==lookup:== returned nil and we raise a Pharo error. 
 
 [[[
-basicSend: selector withArguments: arguments from: aClass
-	"Execute the method found starting from aClass and whose name is selector."
-	"The core of the sending a message, reused for both a normal send or a super one."
-	| methodOrNil |
-	methodOrNil := (aClass lookup: selector).
-	^ methodOrNil 
-		ifNotNil: [ methodOrNil valueWithArguments: (Array with: self) , arguments ] 
-		ifNil: [ Error signal: 'Obj message' , selector asString, ' not understood' ] 
+Obj >> basicSend: selector withArguments: arguments from: aClass
+   "Execute the method found starting from aClass and whose name is selector."
+   "The core of the sending a message, reused for both a normal send or a super one."
+   | methodOrNil |
+   methodOrNil := aClass lookup: selector.
+   ^ methodOrNil 
+      ifNotNil: [ methodOrNil valueWithArguments: (Array with: self) , arguments ] 
+      ifNil: [ Error signal: 'Obj message' , selector asString, ' not understood' ] 
 ]]]
 
 Based on this primitive we can express ==send:withArguments:== and ==super:withArguments:== as follows:
 
 [[[
-send: selector withArguments: arguments 
-	"send the message whose selector is <selector> to the receiver. The arguments of the messages are an array <arguments>. The method is lookep up in the class of the receiver. self is an objObject or a objClass."
+Obj >> send: selector withArguments: arguments 
+   "send the message whose selector is <selector> to the receiver. The arguments of the messages are an array <arguments>. The method is lookep up in the class of the receiver. self is an objObject or a objClass."
 
-	^ self basicSend: selector withArguments: arguments from:  self objClass
+   ^ self basicSend: selector withArguments: arguments from:  self objClass
 ]]]
 
 
-
-
 !!!Method Lookup
-The primitive ==lookup: selector== applied to an objClass should return the method associated to the selector if it found it, else nil to indicate that it failed. 
+The primitive ==lookup: selector== applied to an ==objClass== should return the method associated to the selector if it found it, else nil to indicate that it failed. 
 
-!!!! Your Job. 
+!!!! Your Job 
 Implement the primitive ==lookup: selector== that sent to an objClass with a method selector, a symbol and the initial receiver of the message, returns the method-body of the method associated with the selector in the objClass or its superclasses.  Moreover if the method is not found, nil is returned.
 
-Make sure that you execute the test method: ==testNilWhenErrorInLookup== and ==testRaisesErrorSendWhenErrorInLookup==
+Make sure that you execute the test methods: ==testNilWhenErrorInLookup== and ==testRaisesErrorSendWhenErrorInLookup== whose code is given below:
+
+[[[
+ObjTest >> testNilWhenErrorInLookup
+   "(self  selector: #testNilWhenErrorInLookup) run"
+   
+   self assert: (pointClass lookup: #zork) isNil.
+   "The method zork is NOT implement on pointClass"
+]]]
 
 
-
-
-
-
+[[[
+ObjTest >> testRaisesErrorSendWhenErrorInLookup
+   "(self  selector: #testRaisesErrorSendWhenErrorInLookup) run"
+   
+   self should: [  pointClass send: #zork withArguments: { aPoint } ] raise: Error.
+   "Open a Transcript to see the message trace"
+]]]
 
 
 !! Managing super
@@ -450,9 +520,9 @@ In Pharo we wrapped the block representing the method around another block with 
 
 [[[
 method := [: superClassOfClassDefiningTheMethod |
-		 	[:objself :otherArgs  |
-	        	  ... method code ...
-	          	]]
+          [:objself :otherArgs  |
+                ... method code ...
+                ]]
 method value: (Obj giveClassNamed: self objSuperclassId)
 ]]]
 
@@ -473,42 +543,42 @@ Compare the two following versions of ==basicSend: selector withArguments: argum
 
 [[[
 basicSend: selector withArguments: arguments from: aClass
-	"Execute the method found starting from aClass and whose name is selector."
-	"The core of the sending a message, reused for both a normal send or a super one."
-	| methodOrNil |
-	methodOrNil := (aClass lookup: selector).
-	^ methodOrNil 
-		ifNotNil: [ methodOrNil valueWithArguments: (Array with: self) , arguments ] 
-		ifNil: [ Error signal: 'Obj message' , selector asString, ' not understood' ] 
+   "Execute the method found starting from aClass and whose name is selector."
+   "The core of the sending a message, reused for both a normal send or a super one."
+   | methodOrNil |
+   methodOrNil := (aClass lookup: selector).
+   ^ methodOrNil 
+      ifNotNil: [ methodOrNil valueWithArguments: (Array with: self) , arguments ] 
+      ifNil: [ Error signal: 'Obj message' , selector asString, ' not understood' ] 
 ]]]
 
 
 [[[
 basicSend: selector withArguments: arguments from: aClass
-	"Execute the method found starting from aClass and whose name is selector."
-	"The core of the sending a message, reused for both a normal send or a super one."
-	| methodOrNil |
-	methodOrNil := (aClass lookup: selector).
-	^ methodOrNil 
-		ifNotNil: [ methodOrNil valueWithArguments: (Array with: self) , arguments ] 
-		ifNil: [ self sendError: selector withArgs: arguments ] 
+   "Execute the method found starting from aClass and whose name is selector."
+   "The core of the sending a message, reused for both a normal send or a super one."
+   | methodOrNil |
+   methodOrNil := (aClass lookup: selector).
+   ^ methodOrNil 
+      ifNotNil: [ methodOrNil valueWithArguments: (Array with: self) , arguments ] 
+      ifNil: [ self sendError: selector withArgs: arguments ] 
 ]]]
 
 It should be noted that the objVlisp method is defined as follows in the ==ObjObject== class (see the bootstrap method on the class side of Obj). The obj ==error== method expects a single parameter: an array of arguments whose first element is the selector of the not understood message. 
 
 [[[
 objObject 
-	addMethod: #error
-	args: 'arrayOfArguments'
-	withBody: 'Transcript show: ''error '', arrayOfArguments first.  ''error '', arrayOfArguments first'.
+   addMethod: #error
+   args: 'arrayOfArguments'
+   withBody: 'Transcript show: ''error '', arrayOfArguments first.  ''error '', arrayOfArguments first'.
 ]]]
 
 [[[
 sendError: selector withArgs: arguments
-	"send error wrapping arguments into an array with the selector as first argument. Instead of an array we should create a message object."
-	
-	^ self send: #error withArguments:  {(arguments copyWithFirst: selector)==
-	
+   "send error wrapping arguments into an array with the selector as first argument. Instead of an array we should create a message object."
+   
+   ^ self send: #error withArguments:  {(arguments copyWithFirst: selector)==
+   
 ]]]
 
 Make sure that you read and execute the test method: ==testSendErrorRaisesErrorSendWhenErrorInLookup==
@@ -575,8 +645,8 @@ Make sure that you execute the test method: ==testManuallyCreateObjClassStructur
 [[[
 Obj class >>defineManualInitializeMethodIn: class 
       class 
-	  	addMethod: #initialize
-      	withBody: 
+        addMethod: #initialize
+         withBody: 
             [ :aclass :initArray | 
             |  objsuperclass |
             aclass initializeUsing: initArray.            
@@ -601,9 +671,9 @@ The primitive ==defineAllocateMethodIn: anObjClass== defines in anObjClass passe
 [[[
 defineAllocateMethodIn: class 
 
-	class 
-		addUnaryMethod: #allocate 
-		withBody: 'objself allocateAnInstance'
+   class 
+      addUnaryMethod: #allocate 
+      withBody: 'objself allocateAnInstance'
 ]]]
 
 Following the same principle, define the primitive ==defineNewMethodIn: anObjClass== that defines in anObjClass passed as argument the objMethod ==new==. ==new== takes two arguments: a class and an  initargs-list. It should invoke the objMethod ==allocate== and ==initialize==.
@@ -642,7 +712,7 @@ to the class ==ObjClass==:
 [[[ 
 Obj class >>objObjectStructure
 
-	^ (self giveClassNamed: #ObjClass)
+   ^ (self giveClassNamed: #ObjClass)
           send: #new
           withArguments: #(#(#name: #ObjObject #iv: #(#class)))
 ]]]
@@ -779,19 +849,19 @@ Obj class>>defineInitializeMethodIn: objClass
 [[[
 Obj class >>defineInitializeMethodIn: objClass 
 
-	objClass 
-		addMethod: #initialize
-		args: 'initArray'
-		withBody: 
-			'objself super: #initialize withArguments: {initArray} from: superClassOfClassDefiningTheMethod.
-			objself objIVs: (objself
-							computeNewIVFrom: (Obj giveClassNamed: objself objSuperclassId) objIVs
-							with: objself objIVs).
-			objself computeAndSetKeywords.
-			objself objMethodDict: IdentityDictionary new.
-			Obj declareClass: objself.
-			objself'
-]]]			
+   objClass 
+      addMethod: #initialize
+      args: 'initArray'
+      withBody: 
+         'objself super: #initialize withArguments: {initArray} from: superClassOfClassDefiningTheMethod.
+         objself objIVs: (objself
+                     computeNewIVFrom: (Obj giveClassNamed: objself objSuperclassId) objIVs
+                     with: objself objIVs).
+         objself computeAndSetKeywords.
+         objself objMethodDict: IdentityDictionary new.
+         Obj declareClass: objself.
+         objself'
+]]]         
        
 
 Make sure that you execute the test method: ==testCreateObjClassMessage==
@@ -832,16 +902,16 @@ Then add some functionality to the class ==ObjPoint== like the methods ==x==, ==
 
 [[[
 ObjPoint 
-	addMethod: #x
+   addMethod: #x
     withBody: [:objself | objself send: #getIV withArguments: #(#x)].
 
 ObjPoint 
-	addMethod: #x:
-	args: 'val'
+   addMethod: #x:
+   args: 'val'
     withBody: [:objself :val | objself send: #setIV withArguments: (Array with: #x with: val)].
 
 ObjPoint 
-	addMethod: #display
+   addMethod: #display
     withBody:  [:objself |
                         Transcript cr; show: 'aPoint with x = '.
                         Transcript show: (objself send: #x withArguments: #()) printString; cr].
