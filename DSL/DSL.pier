@@ -1,7 +1,7 @@
-!Crafting a little Embedded DSL
+!Crafting a Simple Embedded DSL with Pharo
 
 
-In this chapter we will develop a simple domain specific language (DSL) for rolling dice. Players of games such as Dungeon and Dragons are familiar with the DSL we will implement. An example of such DSL is ==2 D20 + 1 D6== which means that we should roll two times a 20-faces dice and one time a 6 faces dice. This chapter will show how we can (1) simply reuse traditional operator such as ==\+==, (2) develop an embedded DSL and (3) show a nice usage of class extensions.
+In this chapter we will develop a simple domain specific language (DSL) for rolling dice. Players of games such as Dungeon and Dragons are familiar with the DSL we will implement. An example of such DSL is ==2 D20 + 1 D6== which means that we should roll two times a 20-faces dice and one time a 6 faces dice. This tutorial shows how we can (1) simply reuse traditional operator such as ==\+==, (2) develop an embedded DSL and (3) use class extensions (aka open classes).
 
 
 !! Getting started
@@ -15,14 +15,13 @@ Using the code browser, define a package named ==Dice== or any name your like.
 Object subclass: #Dice
 	instanceVariableNames: 'faces'
 	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Dice'
+	package: 'Dice'
 ]]]
 
 In the ==initialize== category, define the method ==initialize== as follows. It simply set the default number of faces to 6. 
 
 [[[
-Dice>>initialize 
+Dice >> initialize 
 	super initialize.
 	faces := 6
 ]]]
@@ -31,7 +30,7 @@ Dice>>initialize
 !!! Creating a test 
 
 It is always empowering to verify that the code we write is always working as we defining it. For 
-this purpose we will create a unit test. Remember unit testing was promoted by K. Beck first in Smalltalk. Nowadays this is a common practice but this is always useful to remember our roots!
+this purpose we will create a unit test. Remember unit testing was promoted by K. Beck first in Smalltalk the ancestor of Pharo. Nowadays this is a common practice but this is always useful to remember our roots!
 
 So we define the class ==DiceTest== as a subclass of ==TestCase==.
 
@@ -39,33 +38,30 @@ So we define the class ==DiceTest== as a subclass of ==TestCase==.
 TestCase subclass: #DiceTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Dice'
+	package: 'Dice'
 ]]]
 
 
 [[[
-DiceTest>>testInitializeIsOk
-
-		self shouldnt: [ Dice new ] raise: Error
+DiceTest >> testInitializeIsOk
+    self shouldnt: [ Dice new ] raise: Error
 ]]]
 
 !! Rolling a dice
 To roll a dice we will use the method from Number ==atRandom== which draws randomly a 
-number between one and the receiver. For example ==10 at random== draws number between 1 to 10. 
+number between one and the receiver. For example ==10 atRandom== draws number between 1 to 10. 
 Therefore we define the method ==roll== as follows.
 
 [[[
-Dice>>roll
-
-	^ faces atRandom
+Dice >> roll
+    ^ faces atRandom
 ]]]
 
 Now we can create an instance ==Dice new== and send it the message  ==roll== and get a result.
 Do ==Dice new inspect== and then type in the bottom pane ==self roll==.
-You should get an inspector like the one shown in Figure *figDiceNoDetail*. With it you can interact with the dice by writing expression in the bottom pane.
+You should get an inspector like the one shown in Figure *@figDiceNoDetail*. With it you can interact with the dice by writing expression in the bottom pane.
 
-+Inspecting and interacting with a Dice>file://figures/DiceNoDetail.pdf|width=50|label=figDiceNoDetail+
++Inspecting and interacting with a Dice.>file://figures/DiceNoDetail.pdf|width=50|label=figDiceNoDetail+
 
  
 
@@ -74,7 +70,7 @@ We will define a test that verifies that rolling a new created dice with a defau
 value comprised between 1 and 6. This is what the following test method is actually specifying.
  
 [[[
-DiceTest>>testRolling
+DiceTest >> testRolling
 	
 	| d |
 	d := Dice new. 
@@ -87,16 +83,16 @@ Note that often it is better to define the test even before the code it tests. W
 We would like to get a simpler way to create Dice. For example we want to create a 20-faces dice as follows: ==Dice faces: 20==. Let us define a test for it.
 
 [[[
-DiceTest>>testCreationIsOk
+DiceTest >> testCreationIsOk
 	
-		self shouldnt: [ Dice faces: 20 ] raise: Error
+	self shouldnt: [ Dice faces: 20 ] raise: Error
 ]]]
 
 
 We define the class method ==faces:== as follows. It creates an instance then send the message ==faces:== to it and returns the instance.
 
 [[[
-Dice class>>faces: aNumber
+Dice class >> faces: aNumber
 
 	| instance |
 	instance := self new.
@@ -107,7 +103,7 @@ Dice class>>faces: aNumber
 This method is strictly equivalent to the one below. The trick is that ==yourself== is a simple method defined on ==Object== class. ==yourself== returns the receiver of a message and the use of ==;== sends the message to the receiver of the previous message (here ==faces:==), therefore ==yourself== is sent to the object resulting from the execution of the expression ==self new== (which returns a new instance of the class ==Dice==). 
 
 [[[
-Dice class>>faces: aNumber
+Dice class >> faces: aNumber
 	
 	^ self new faces: aNumber; yourself
 ]]]
@@ -141,14 +137,13 @@ Of course we will define a test for this new class. We define the class ==DiceHa
 TestCase subclass: #DiceHandleTest
 	instanceVariableNames: ''
 	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Dice'
+	package: 'Dice'
 ]]]
 
 We define a new test method as follows. 
 
 [[[
-DiceHandleTest>>testCreationAdding
+DiceHandleTest >> testCreationAdding
 
 	| handle |
 	handle := DiceHandle new 
@@ -159,15 +154,14 @@ DiceHandleTest>>testCreationAdding
 ]]]
 
 In fact we can do it better and add a new test method that verifies that we can even add
-two dices having the same number of faces. 
+two dice having the same number of faces. 
 
 [[[
-DiceHandleTest>>testAddingTwiceTheSameDice
+DiceHandleTest >> testAddingTwiceTheSameDice
 
 	| handle |
-	handle := DiceHandle new 
-			addDice: (Dice faces: 6);
-			yourself.
+	handle := DiceHandle new. 
+	handle addDice: (Dice faces: 6).
 	self assert: handle diceNumber = 1.
 	handle addDice: (Dice faces: 6).
 	self assert: handle diceNumber = 2.
@@ -177,32 +171,31 @@ DiceHandleTest>>testAddingTwiceTheSameDice
 
 !!! Defining the DiceHandle class
 
-This class defines one instance variable to hold dices it contains. 
+This class defines one instance variable to hold dice it contains. 
 
 [[[
 Object subclass: #DiceHandle
 	instanceVariableNames: 'dice'
 	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Dice'
+	package: 'Dice'
 ]]]
 
 We simply initialize it so that its instance variable ==dice== contains an ==OrderedCollection==.
 
 [[[
-DiceHandle>>initialize
+DiceHandle >> initialize
 	super initialize.
 	dice := OrderedCollection new.
 ]]]
 
-Then we define a simple method to add a dice to the list of dices of the handle.
+Then we define a simple method to add a dice to the list of dice of the handle.
 
 [[[
-DiceHandle>>addDice: aDice 
+DiceHandle >> addDice: aDice 
 	dice add: aDice
 ]]]
 
-Now you can execute the code snippet and inspect it. You should get an inspector as shown in Figure *diceHandleNoDetail* 
+Now you can execute the code snippet and inspect it. You should get an inspector as shown in Figure *@diceHandleNoDetail* 
 [[[
 DiceHandle new 
 	addDice: (Dice faces: 6);
@@ -210,11 +203,11 @@ DiceHandle new
 	yourself
 ]]]
 
-+Inspecting a Dice>file://figures/DiceHandleNoDetail.pdf|width=50|label=diceHandleNoDetail+
++Inspecting a Dice.>file://figures/DiceHandleNoDetail.pdf|width=50|label=diceHandleNoDetail+
 
 
 
-Finally we should add the method ==diceNumber== to the ==DiceHandle== class to be able to get the number of dice of the handle. We just returns the size of the dices collection.
+Finally we should add the method ==diceNumber== to the ==DiceHandle== class to be able to get the number of dice of the handle. We just return the size of the dice collection.
 
 [[[
 DiceHandle>>diceNumber  
@@ -229,7 +222,7 @@ Now you tests should run and this is good moment to save and publish your code.
 
 !! Improving programmer experience
 
-Now when you open an inspector you cannot see well the dices that compose the dice handle. Click on the dice instance variable and you will only get a list of ==a Dice== without further information. 
+Now when you open an inspector you cannot see well the dice that compose the dice handle. Click on the ==dice== instance variable and you will only get a list of ==a Dice== without further information. 
 
 [[[
 DiceHandle new 
@@ -248,7 +241,7 @@ Dice>>printOn: aStream
 	aStream nextPutAll: ' (', faces printString, ')'
 ]]]
 
-Now in your inspector you can see effectively the number of faces a dice handle has as shown by Figure *diceDetail* and it is now easier to check the dice contained inside a handle (See Figure *diceHandleDetail*).
+Now in your inspector you can see effectively the number of faces a dice handle has as shown by Figure *@diceDetail* and it is now easier to check the dice contained inside a handle (See Figure *@diceHandleDetail*).
 
 +Dice details>file://figures/DiceDetail.png|width=50|label=diceDetail+ 
 

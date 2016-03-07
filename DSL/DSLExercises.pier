@@ -1,12 +1,7 @@
 !Crafting a Simple Embedded DSL with Pharo
 
 In this tutorial we develop a simple Domain Specific Language (DSL) for rolling dice. Players of games such as Dungeon and Dragons are familiar with the DSL we implement. An example of such DSL is
-
-[[[
-2 D20 + 1 D6
-]]]
-
-This example means that we should roll two times a 20-faces dice and one time a 6 faces dice. This tutorial shows how we can (1) simply reuse traditional operator such as ==\+==, (2) develop an embedded DSL and (3) use class extensions (aka open classes).
+==2 D20 + 1 D6==.  This example means that we should roll two times a 20-faces dice and one time a 6 faces dice. This tutorial shows how we can (1) simply reuse traditional operator such as ==\+==, (2) develop an embedded DSL and (3) use class extensions (aka open classes).
 
 !! Getting started
 
@@ -29,21 +24,19 @@ Your code here
 
 !!! Creating a test
 
-It is always empowering to verify that the code we write is always working as we defined it. For this purpose we create a unit test.
-So we define the class ==DiceTest== as a subclass of ==TestCase==.
+It is always empowering to verify that the code we write is always working as we defined it. For this purpose we create a unit test. So we define the class ==DiceTest== as a subclass of ==TestCase==.
 
 [[[
 TestCase subclass: #DiceTest
     instanceVariableNames: ''
     classVariableNames: ''
-    poolDictionaries: ''
-    category: 'Dice'
+    package: 'Dice'
 ]]]
 
 We add a new test ==testInitializeIsOk== to make sure we can create a new dice.
 
 [[[
-DiceTest>>testInitializeIsOk
+DiceTest >> testInitializeIsOk
     self shouldnt: [ Dice new ] raise: Error
 ]]]
 
@@ -60,7 +53,7 @@ Your code here
 ]]]
 
 Now we can create a new instance of ==Dice==, send it the message  ==roll==, and get a result.
-Open a workspace (==World menu==, ==Workspace==). Write ==Dice new inspect== and execute the expression (==ctrl d==). You should get an inspector like the one shown in Figure *figDiceNoDetail*. With it you can interact with the dice by writing expressions in the bottom pane. In this pane, type ==self roll== and print the result (==ctrl p==). You should get a random number.
+Open a workspace (==World menu==, ==Workspace==). Write ==Dice new inspect== and execute the expression (==ctrl d==). You should get an inspector like the one shown in Figure *@figDiceNoDetail*. With it you can interact with the dice by writing expressions in the bottom pane. In this pane, type ==self roll== and print the result (==ctrl p==). You should get a random number.
 
 +Inspecting and interacting with a Dice>file://figures/DiceNoDetail.pdf|width=50|label=figDiceNoDetail+
 
@@ -69,7 +62,7 @@ Open a workspace (==World menu==, ==Workspace==). Write ==Dice new inspect== and
 We define a test that verifies that rolling a new created dice (with 6 faces by default) only returns values comprised between 1 and 6. This is what the following test method is actually specifying.
 
 [[[
-DiceTest>>testRolling
+DiceTest >> testRolling
     | d |
     d := Dice new.
     100 timesRepeat: [ self assert: (d roll between: 1 and: 6) ]
@@ -82,7 +75,7 @@ Execute the test to make sure it runs fine.
 Now, we would like to get a simpler way to create ==Dice== instances. For example we want to create a 20-faces dice as follows: ==Dice faces: 20==. Let us define a test for it. When you save this method, you might get a warning message saying that ==faces:== is an unknown method name (aka., selector). Just confirm the name to validate.
 
 [[[
-DiceTest>>testCreationIsOk
+DiceTest >> testCreationIsOk
     self shouldnt: [ Dice faces: 20 ] raise: Error
 ]]]
 
@@ -91,7 +84,7 @@ Execute the test and you should get an error message because the class ==Dice== 
 Another way to create this method is to do it right from the debugger that pops up when a method does not exist. Just click the ==Create== button in the debugger, select the ==Dice== class, and the ==instance creation== protocol. The method first creates an instance, then sends it the message ==faces:==, and returns the instance. You can implement the method right in the debugger.
 
 [[[
-Dice class>>your code here
+Dice class >> your code here
 ]]]
 
 To implement this method, you will have to send the message ==new== to the class: ==self== is the current class when implementing a class method.
@@ -129,19 +122,17 @@ Of course we define a test for this new class. We define the class ==DiceHandleT
 TestCase subclass: #DiceHandleTest
     instanceVariableNames: ''
     classVariableNames: ''
-    poolDictionaries: ''
-    category: 'Dice'
+    package: 'Dice'
 ]]]
 
 We define a new test method as follows.
 
 [[[
-DiceHandleTest>>testCreationAdding
+DiceHandleTest >> testCreationAdding
     | handle |
-    handle := DiceHandle new
-        addDice: (Dice faces: 6);
-        addDice: (Dice faces: 10);
-        yourself.
+    handle := DiceHandle new.
+    handle addDice: (Dice faces: 6);
+    handle addDice: (Dice faces: 10).
     self assert: handle diceNumber equals: 2.
 ]]]
 
@@ -152,9 +143,8 @@ With another test, we can make sure we can add two times a similar dice.
 [[[
 DiceHandleTest>>testAddingTwiceTheSameDice
     | handle |
-    handle := DiceHandle new
-        addDice: (Dice faces: 6);
-        yourself.
+    handle := DiceHandle new.
+    handle addDice: (Dice faces: 6);
     self assert: handle diceNumber equals: 1.
     handle addDice: (Dice faces: 6).
     self assert: handle diceNumber equals: 2.
@@ -185,7 +175,7 @@ DiceHandle new
     yourself
 ]]]
 
-You should get an inspector as shown in Figure *diceHandleNoDetail*.
+You should get an inspector as shown in Figure *@diceHandleNoDetail*.
 
 +Inspecting a dice handle>file://figures/DiceHandleNoDetail.pdf|width=50|label=diceHandleNoDetail+
 
@@ -199,9 +189,9 @@ Now your tests should pass and this is good moment to save your code.
 
 !! Improving the programmer experience
 
-When you open an inspector on a dice handle (such as the one in Figure *diceHandleNoDetail*) you cannot see the details of the dices that compose the dice handle. Click on the ==dice== instance variable and you only get a list of =="a Dice"== without further information as you can see in Figure *diceHandleNoDetail*.
+When you open an inspector on a dice handle (such as the one in Figure *@diceHandleNoDetail*) you cannot see the details of the dices that compose the dice handle. Click on the ==dice== instance variable and you only get a list of =="a Dice"== without further information as you can see in Figure *@diceHandleNoDetail*.
 
-Enhance the ==printOn:== method of the ==Dice== class to provide more information: simply add the number of faces surrounded by parenthesis to make the result look like the one in Figure *diceHandleDetail*.
+Enhance the ==printOn:== method of the ==Dice== class to provide more information: simply add the number of faces surrounded by parenthesis to make the result look like the one in Figure *@diceHandleDetail*.
 
 @@note You may want to have a look at all the implementors of ==printOn:== (contextual menu of the ==printOn:== method, ==Implementors of==) to get examples.
 
@@ -209,11 +199,11 @@ Enhance the ==printOn:== method of the ==Dice== class to provide more informatio
 Your code here
 ]]]
 
-Now in your inspector you can see the number of faces a dice has as shown by Figure *diceDetail* and it is now easier to check the dice contained inside a handle (see Figure *diceHandleDetail*).
+Now in your inspector you can see the number of faces a dice has as shown by Figure *@diceDetail* and it is now easier to check the dice contained inside a handle (see Figure *@diceHandleDetail*).
 
-+Dice details>file://figures/DiceDetail.png|width=50|label=diceDetail+
++Dice details.>file://figures/DiceDetail.png|width=50|label=diceDetail+
 
-+Dice Handle with more information>file://figures/DiceHandleDetail.png|width=50|label=diceHandleDetail+
++Dice Handle with more information.>file://figures/DiceHandleDetail.png|width=50|label=diceHandleDetail+
 
 !! Rolling a dice handle
 
@@ -242,7 +232,7 @@ We are ready to offer a syntax following practice of role playing game, i.e., us
 First let us specify what we would like to obtain by writing a new test in the class ==DiceHandleTest==. Remember to always take  any opportunity to write tests.  When we execute ==2 D20== we  should get a new handle composed of two dice and can verify that. This is what the method ==testSimpleHandle== is doing.
 
 [[[
-DiceHandleTest>>testSimpleHandle
+DiceHandleTest >> testSimpleHandle
     self assert: 2 D20 diceNumber equals: 2.
 ]]]
 
@@ -276,7 +266,7 @@ We have a compact form to create dice and we are ready for the last part: the ad
 Now we can simply support the addition of handles. Let us write a test first.
 
 [[[
-DiceHandleTest>>testSumming
+DiceHandleTest >> testSumming
     | handle |
     handle := 2 D20 + 3 D10.
     self assert: handle diceNumber equals: 5.
@@ -298,8 +288,3 @@ This tutorial illustrates how to create a small DSL based on the definition of s
  ==DiceHandle==). We used class extension (on ==Integer==) to simplify the instanciation of these classes.
 This tutorial shows that in Pharo we can use standard operators to express natural models.
 
-% Local Variables:
-% eval: (flyspell-mode 1)
-% End:
-
-%  LocalWords:  accessor
