@@ -161,7 +161,7 @@ RawObjTest >> testPrimitiveStructureObjIVs
  
 Implement the primitives that are missing to run the following tests ==testPrimitiveStructureObjClassId==,
  ==testPrimitiveStructureObjIVs==, ==testPrimitiveStructureObjKeywords==, 
- ==testPrimitiveStructureObjMethodDict==, ==testPrimitiveStructureObjName==, ==testPrimitiveStructureObjIVs== and ==testPrimitiveStructureObjSuperclassId==. 
+ ==testPrimitiveStructureObjMethodDict==, ==testPrimitiveStructureObjName== and ==testPrimitiveStructureObjSuperclassId==. 
 
 You can execute them by selecting the following expression ==(RawObjTest selector:
  #testPrimitiveStructureObjClassId) run==.  Note that arrays start at 1 in Pharo. Below is the list of the primitives that you should implement.
@@ -170,11 +170,11 @@ Implement in category =='object structure primitives'== the primitives that mana
 - the class of the instance represented  as a symbol. ==objClassId==, ==objClassId: aSymbol==. The receiver is an ==objObject==. This means that this primitive  can be applied on any objInstances to get its class identifier.
 
 Implement in category =='class structure primitives'== the primitives that manage:
-- the class name. ==objName==, ==objName: aSymbol==. The receiver is an objClass.
-- the superclass ==objSuperclassId==, ==objSuperclassId: aSymbol==. The receiver is an objClass.
-- the instance variables ==objIVs==, ==objIVs: anOrderedCollection==. The receiver is an objClass.
-- the keyword list ==objKeywords==, ==objKeywords: anOrderedCollection==. The receiver is an objClass. 
-- the method dictionary ==objMethodDict==, ==objMethodDict: anIdentityDictionary==. The receiver is an objClass.
+- the class name: ==objName==, ==objName: aSymbol==. The receiver is an objClass.
+- the superclass: ==objSuperclassId==, ==objSuperclassId: aSymbol==. The receiver is an objClass.
+- the instance variables: ==objIVs==, ==objIVs: anOrderedCollection==. The receiver is an objClass.
+- the keyword list: ==objKeywords==, ==objKeywords: anOrderedCollection==. The receiver is an objClass. 
+- the method dictionary: ==objMethodDict==, ==objMethodDict: anIdentityDictionary==. The receiver is an objClass.
 
 
 
